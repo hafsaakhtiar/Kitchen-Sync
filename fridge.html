@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KitchenSync - My Fridge & Recipes</title>
+  <link rel="stylesheet" href="background.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --primary:#ff7043;
+      --primary-dark:#e85d32;
+      --green:#2f855a;
+      --green-light:#eaf7ef;
+      --red:#d64545;
+      --cream:#fffaf5;
+      --text:#252525;
+      --muted:#6b7280;
+      --border:#ece7e2;
+      --white:#fff;
+      --shadow:0 14px 35px rgba(44,31,22,.08);
+    }
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:Poppins,Arial,sans-serif;background:linear-gradient(180deg,#fffaf5 0%,#f8faf8 45%,#fff 100%);color:var(--text);min-height:100vh}
+    a{text-decoration:none;color:inherit}
+    button,input,select{font:inherit}
+    .app-container{max-width:1250px;margin:auto;padding:24px 20px 50px}
+    header{display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap;padding:12px 0 22px;margin-bottom:15px;border-bottom:1px solid var(--border)}
+    header h1{font-size:1.55rem;font-weight:800}
+    .nav-links{display:flex;gap:7px;flex-wrap:wrap;align-items:center}
+    .nav-links a{padding:9px 12px;border-radius:10px;color:#5c5c5c;font-size:.88rem;font-weight:600}
+    .nav-links a:hover,.nav-links a.active{background:#fff0e9;color:var(--primary-dark)}
+    .hero{display:grid;grid-template-columns:1.25fr .75fr;gap:22px;align-items:stretch;margin:22px 0 28px}
+    .hero-main,.hero-side{border-radius:24px;overflow:hidden;box-shadow:var(--shadow)}
+    .hero-main{padding:32px;background:linear-gradient(135deg,#fff0e8,#fff9f4)}
+    .eyebrow{display:inline-block;background:#ffe1d2;color:var(--primary-dark);padding:7px 11px;border-radius:999px;font-size:.76rem;font-weight:700;margin-bottom:13px}
+    .hero-main h2{font-size:clamp(1.8rem,4vw,3rem);line-height:1.1;margin-bottom:12px}
+    .hero-main p{color:var(--muted);max-width:680px;line-height:1.75}
+    .hero-points{display:flex;flex-wrap:wrap;gap:10px;margin-top:20px}
+    .hero-points span{background:#fff;border:1px solid #f0ded5;border-radius:12px;padding:9px 12px;font-size:.82rem}
+    .hero-side{min-height:250px;background:url('https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=1000&q=85') center/cover;position:relative}
+    .hero-side::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,transparent 30%,rgba(0,0,0,.7))}
+    .hero-caption{position:absolute;z-index:1;left:22px;bottom:20px;color:#fff}
+    .hero-caption strong{display:block;font-size:1.25rem}
+    .notice{display:none;background:#fff6db;color:#855f00;padding:13px 16px;border:1px solid #f2d58c;border-radius:14px;margin-bottom:22px}
+    .section-title{display:flex;align-items:end;justify-content:space-between;gap:15px;margin:28px 0 12px}
+    .section-title h3{font-size:1.25rem}
+    .section-title p{color:var(--muted);font-size:.88rem}
+    .pantry-box{background:#fff;border:1px solid var(--border);border-radius:18px;padding:18px;box-shadow:var(--shadow)}
+    #pantry-checkboxes{display:flex;flex-wrap:wrap;gap:9px}
+    .ingredient-btn{border:1px solid #e7e2dd;background:#faf9f7;color:#444;border-radius:999px;padding:8px 13px;cursor:pointer;transition:.2s}
+    .ingredient-btn:hover{transform:translateY(-1px);border-color:#ffc7b1}
+    .ingredient-btn.active{background:var(--primary);color:#fff;border-color:var(--primary)}
+    .controls{display:grid;grid-template-columns:1fr 220px;gap:12px;margin:18px 0 6px}
+    .search-wrap{position:relative}.search-wrap span{position:absolute;left:14px;top:50%;transform:translateY(-50%)}
+    .controls input,.controls select{width:100%;padding:13px 15px;border:1px solid var(--border);border-radius:12px;background:#fff;outline:none}
+    .controls input{padding-left:42px}.controls input:focus,.controls select:focus{border-color:#ffb49a;box-shadow:0 0 0 3px #fff0e9}
+    .recipe-count{color:var(--muted);font-size:.86rem;margin-top:6px}
+    .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:17px}
+    .card{background:#fff;border:1px solid var(--border);border-radius:20px;overflow:hidden;box-shadow:var(--shadow);display:flex;flex-direction:column;min-width:0;transition:.25s}
+    .card:hover{transform:translateY(-4px);box-shadow:0 18px 42px rgba(44,31,22,.12)}
+    .card-img{width:100%;height:210px;object-fit:cover;display:block}
+    .card-body{padding:17px;display:flex;flex-direction:column;gap:11px;flex:1}
+    .badges{display:flex;gap:7px;flex-wrap:wrap}.badge{font-size:.72rem;padding:5px 8px;border-radius:999px;background:#f5f5f4;color:#555}.badge.green{background:var(--green-light);color:var(--green)}
+    .card h3{font-size:1.08rem;line-height:1.35}
+    .meta{font-size:.78rem;color:var(--muted)}
+    .availability{font-size:.8rem;font-weight:700}
+    .ready{color:var(--green)}.missing{color:var(--red)}
+    .actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:auto}
+    .btn{border:0;border-radius:11px;padding:10px 12px;cursor:pointer;font-weight:700;font-size:.8rem;transition:.2s}
+    .btn:hover{transform:translateY(-1px)}.btn-primary{background:var(--primary);color:#fff}.btn-secondary{background:#f5f5f4;color:#444}.btn-green{background:#e7f6ed;color:#226b48}.btn-dark{background:#262626;color:#fff}
+    .empty{grid-column:1/-1;padding:40px;text-align:center;background:#fff;border:1px dashed #d8d2cc;border-radius:18px;color:var(--muted)}
+    .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;padding:18px;z-index:1000}
+    .modal-content{position:relative;background:#fff;border-radius:22px;max-width:760px;width:100%;max-height:90vh;overflow:auto;padding:24px;box-shadow:0 30px 80px rgba(0,0,0,.25)}
+    .close-btn{position:absolute;right:16px;top:13px;width:36px;height:36px;border:0;border-radius:50%;background:rgba(255,255,255,.92);cursor:pointer;font-size:1.1rem;z-index:2}
+    #m-img{width:100%;height:270px;object-fit:cover;border-radius:16px;margin-bottom:18px}
+    .modal-top{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0 18px}.modal-chip{background:#f7f4f1;padding:7px 10px;border-radius:9px;font-size:.78rem}
+    .modal-section{margin-top:22px}.modal-section h3{margin-bottom:10px}
+    .ingredient-list{display:grid;grid-template-columns:1fr 1fr;gap:8px;list-style:none}.ingredient-list li{background:#faf9f7;padding:9px 11px;border-radius:9px;color:#444;font-size:.88rem}
+    .steps{display:grid;gap:10px}.step{display:flex;gap:12px;align-items:flex-start;background:#f8fbf9;border:1px solid #e4eee8;padding:12px;border-radius:12px}.step-no{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;background:var(--green);color:white;font-weight:800;flex:none;font-size:.8rem}
+    .tip{margin-top:18px;padding:13px 14px;background:#fff6e8;border-radius:12px;color:#755325;font-size:.85rem;line-height:1.6}
+    @media(max-width:950px){.grid{grid-template-columns:repeat(2,1fr)}.hero{grid-template-columns:1fr}.hero-side{min-height:230px}}
+    @media(max-width:650px){.app-container{padding:16px 13px 35px}.controls{grid-template-columns:1fr}.grid{grid-template-columns:1fr}.actions{grid-template-columns:1fr}.ingredient-list{grid-template-columns:1fr}header{align-items:flex-start}.nav-links a{padding:7px 8px;font-size:.78rem}.card-img{height:220px}.hero-main{padding:24px}}
+  </style>
+</head>
+<body>
+<div class="app-container">
+  <header>
+    <h1>🥗 What's in My Fridge?</h1>
+    <nav class="nav-links">
+      <a href="index2.html">Home</a>
+      <a href="fridge.html" class="active">My Fridge</a>
+      <a href="saved-recipes.html">Saved</a>
+      <a href="grocery.html">Grocery</a>
+      <a href="planner.html">Planner</a>
+      <a href="scaler.html">Scaler</a>
+      <a href="timer.html">Timer</a>
+      <a href="subscription.html">Pricing</a>
+    </nav>
+  </header>
+
+  <section class="hero">
+    <div class="hero-main">
+      <span class="eyebrow">SMART RECIPE MATCHING</span>
+      <h2>Turn the food you have into something delicious.</h2>
+      <p>Pick the ingredients already in your fridge and KitchenSync will show recipes that match them. Open any recipe for full ingredients, cooking time and easy step-by-step instructions.</p>
+      <div class="hero-points">
+        <span>🧊 Use what you have</span><span>🍳 Simple recipes</span><span>⭐ Save favourites</span><span>🛒 Add missing items</span>
+      </div>
+    </div>
+    <div class="hero-side"><div class="hero-caption"><strong>Fresh ingredients, easy meals.</strong><span>Explore your next homemade favourite.</span></div></div>
+  </section>
+
+  <div id="auth-notice" class="notice">⚠️ Guest Mode: <a href="login.html" style="font-weight:800">Log in</a> to save your fridge items and favourite recipes across sessions.</div>
+
+  <section>
+    <div class="section-title"><div><h3>🧺 Select ingredients you have</h3><p>Tap ingredients to turn them on or off.</p></div></div>
+    <div class="pantry-box"><div id="pantry-checkboxes"></div></div>
+  </section>
+
+  <section>
+    <div class="controls">
+      <div class="search-wrap"><span>🔍</span><input type="text" id="search-bar" placeholder="Search recipes by name..."></div>
+      <select id="dietary-filter">
+        <option value="all">All Diets</option><option value="vegan">Vegan</option><option value="vegetarian">Vegetarian</option><option value="gluten-free">Gluten-Free</option>
+      </select>
+    </div>
+    <div id="recipe-count" class="recipe-count"></div>
+  </section>
+
+  <section>
+    <div class="section-title"><div><h3>🍽️ Recipes for you</h3><p>Open a card to see the full cooking guide.</p></div></div>
+    <div class="grid" id="recipe-list"></div>
+  </section>
+</div>
+
+<div class="modal-overlay" id="recipe-modal" onclick="if(event.target===this) closeModal()">
+  <div class="modal-content">
+    <button class="close-btn" onclick="closeModal()">✕</button>
+    <img id="m-img" src="" alt="Recipe">
+    <h2 id="m-title"></h2>
+    <div id="m-meta" class="modal-top"></div>
+    <div class="modal-section"><h3>🥕 Ingredients</h3><ul id="m-ingredients" class="ingredient-list"></ul></div>
+    <div class="modal-section"><h3>👩‍🍳 Step-by-Step Instructions</h3><div id="m-steps" class="steps"></div></div>
+    <div id="m-tip" class="tip"></div>
+  </div>
+</div>
+
+<script>
+const recipes = [
+  {id:1,name:'Garlic Butter Pasta',image:'https://images.unsplash.com/photo-1621996346565-e3d5d6281313?auto=format&fit=crop&w=900&q=85',prepTime:'5 min',cookTime:'10 min',difficulty:'Easy',diet:'vegetarian',ingredients:['pasta','garlic','butter','salt','black pepper'],steps:['Boil salted water and cook the pasta until tender. Reserve a little pasta water.','Melt butter in a pan and gently cook the minced garlic for 1–2 minutes.','Add the drained pasta and a splash of pasta water. Toss until glossy.','Season with salt and black pepper, then serve warm.'],tip:'Add grated cheese or chilli flakes for extra flavour.'},
+  {id:2,name:'Tomato Basil Salad',image:'https://images.unsplash.com/photo-1592417817098-8f3d6ef23a81?auto=format&fit=crop&w=900&q=85',prepTime:'10 min',cookTime:'0 min',difficulty:'Easy',diet:'vegan',ingredients:['tomatoes','basil','olive oil','salt','black pepper'],steps:['Wash and slice the tomatoes.','Arrange them on a plate and add fresh basil leaves.','Drizzle with olive oil and season with salt and black pepper.','Serve immediately while the tomatoes are fresh.'],tip:'Add cucumber or a little lemon juice for a fresher salad.'},
+  {id:3,name:'Chicken Fried Rice',image:'https://images.unsplash.com/photo-1603133872878-684f208fb84b?auto=format&fit=crop&w=900&q=85',prepTime:'10 min',cookTime:'15 min',difficulty:'Easy',diet:'gluten-free',ingredients:['rice','chicken','eggs','carrots','peas','soy sauce','garlic'],steps:['Cook or use chilled cooked rice. Cut chicken into small pieces.','Cook chicken in a hot pan until fully cooked, then set it aside.','Scramble the eggs, then add garlic, carrots and peas.','Add the rice and chicken, pour in soy sauce and stir-fry for 3–4 minutes.','Taste and adjust the seasoning before serving.'],tip:'Cold leftover rice gives the best fried-rice texture.'},
+  {id:4,name:'Creamy Chicken Pasta',image:'https://images.unsplash.com/photo-1551892374-ecf8754cf8b0?auto=format&fit=crop&w=900&q=85',prepTime:'10 min',cookTime:'20 min',difficulty:'Medium',diet:'',ingredients:['pasta','chicken','cream','garlic','butter','black pepper','salt'],steps:['Boil the pasta until al dente and keep a little pasta water.','Season chicken and cook it in butter until golden and fully cooked.','Add garlic and cook briefly, then pour in cream.','Add pasta and a little pasta water. Stir until the sauce coats the pasta.','Finish with black pepper and serve hot.'],tip:'Do not boil the cream too aggressively; keep the heat medium-low.'},
+  {id:5,name:'Veggie Omelette',image:'https://images.unsplash.com/photo-1510693206972-df098f0cbf06?auto=format&fit=crop&w=900&q=85',prepTime:'5 min',cookTime:'8 min',difficulty:'Easy',diet:'vegetarian',ingredients:['eggs','tomatoes','onion','capsicum','salt','black pepper'],steps:['Beat the eggs with salt and black pepper.','Chop the vegetables into small pieces.','Cook the onion, capsicum and tomato for 2–3 minutes.','Pour in the eggs and cook gently until mostly set.','Fold the omelette and cook for another minute before serving.'],tip:'You can add cheese, spinach or leftover cooked vegetables.'},
+  {id:6,name:'Chickpea Salad Bowl',image:'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&w=900&q=85',prepTime:'10 min',cookTime:'0 min',difficulty:'Easy',diet:'vegan',ingredients:['chickpeas','cucumber','tomatoes','onion','lemon','olive oil','salt'],steps:['Drain and rinse the chickpeas.','Chop cucumber, tomatoes and onion.','Combine everything in a large bowl.','Add lemon juice, olive oil and salt.','Toss well and serve chilled or at room temperature.'],tip:'Add mint or parsley for extra freshness.'},
+  {id:7,name:'Creamy Tomato Soup',image:'https://images.unsplash.com/photo-1547592180-85f173990554?auto=format&fit=crop&w=900&q=85',prepTime:'10 min',cookTime:'25 min',difficulty:'Easy',diet:'vegetarian',ingredients:['tomatoes','onion','garlic','cream','butter','salt','black pepper'],steps:['Cook onion and garlic in butter until soft.','Add chopped tomatoes and cook until they break down.','Blend the mixture until smooth.','Return to the pan and stir in cream.','Season with salt and pepper and simmer gently for a few minutes.'],tip:'Serve with toasted bread or a grilled sandwich.'},
+  {id:8,name:'Vegetable Stir-Fry',image:'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&w=900&q=85',prepTime:'10 min',cookTime:'10 min',difficulty:'Easy',diet:'vegan',ingredients:['broccoli','carrots','capsicum','garlic','soy sauce','oil'],steps:['Cut all vegetables into similar-sized pieces.','Heat oil in a wide pan.','Add garlic, then the vegetables and stir-fry over high heat.','Add soy sauce and toss for another 1–2 minutes.','Serve immediately with rice or noodles.'],tip:'Keep the pan hot so the vegetables stay colourful and slightly crisp.'},
+  {id:9,name:'Chicken Wrap',image:'https://images.unsplash.com/photo-1626700051175-6818013e1d4f?auto=format&fit=crop&w=900&q=85',prepTime:'10 min',cookTime:'12 min',difficulty:'Easy',diet:'',ingredients:['chicken','tortilla','lettuce','tomatoes','mayonnaise','black pepper'],steps:['Season the chicken and cook until fully done, then slice it.','Warm the tortilla for a few seconds.','Spread a thin layer of mayonnaise over the tortilla.','Add lettuce, tomatoes and chicken.','Roll tightly, cut in half and serve.'],tip:'Add cheese or a squeeze of lemon for extra flavour.'},
+  {id:10,name:'Fruit Yogurt Bowl',image:'https://images.unsplash.com/photo-1488477181946-6428a0291777?auto=format&fit=crop&w=900&q=85',prepTime:'5 min',cookTime:'0 min',difficulty:'Easy',diet:'vegetarian',ingredients:['yogurt','banana','apple','honey','nuts'],steps:['Spoon yogurt into a bowl.','Slice the fruit and arrange it on top.','Drizzle with honey.','Finish with chopped nuts and serve chilled.'],tip:'Use seasonal fruit for the best taste.'},
+  {id:11,name:'Spicy Garlic Noodles',image:'https://images.unsplash.com/photo-1612929633738-8fe44f7ec841?auto=format&fit=crop&w=900&q=85',prepTime:'5 min',cookTime:'10 min',difficulty:'Easy',diet:'vegan',ingredients:['noodles','garlic','soy sauce','chilli flakes','oil','spring onion'],steps:['Cook noodles according to the packet instructions and drain.','Heat oil and gently cook the garlic and chilli flakes.','Add soy sauce and then the cooked noodles.','Toss everything together for 1–2 minutes.','Top with spring onion and serve hot.'],tip:'Reduce the chilli if you prefer a mild taste.'},
+  {id:12,name:'Baked Potato Cheese',image:'https://images.unsplash.com/photo-1518977676601-b53f82aba655?auto=format&fit=crop&w=900&q=85',prepTime:'5 min',cookTime:'45 min',difficulty:'Easy',diet:'vegetarian',ingredients:['potatoes','cheese','butter','salt','black pepper'],steps:['Wash potatoes and prick them a few times with a fork.','Bake at 200°C until soft in the centre.','Cut open the potato and add butter, salt and black pepper.','Top with grated cheese and return to the oven until melted.','Serve hot with your favourite toppings.'],tip:'Add sweetcorn, spring onion or leftover chicken on top.'}
+];
+
+const currentUserEmail=localStorage.getItem('currentUser');
+let users=JSON.parse(localStorage.getItem('users'))||[];
+let currentUser=users.find(u=>u.email===currentUserEmail);
+let selectedIngredients=new Set(currentUser?.fridge||[]);
+let savedRecipes=new Set(currentUser?.savedRecipes||[]);
+if(!currentUserEmail) document.getElementById('auth-notice').style.display='block';
+
+function saveUserData(){
+  if(!currentUser) return;
+  currentUser.fridge=[...selectedIngredients];
+  currentUser.savedRecipes=[...savedRecipes];
+  const idx=users.findIndex(u=>u.email===currentUserEmail);
+  if(idx!==-1){users[idx]=currentUser;localStorage.setItem('users',JSON.stringify(users));}
+}
+function renderPantry(){
+  const container=document.getElementById('pantry-checkboxes');
+  const allIngs=[...new Set(recipes.flatMap(r=>r.ingredients))].sort();
+  container.innerHTML='';
+  allIngs.forEach(ing=>{
+    const btn=document.createElement('button');
+    btn.className='ingredient-btn '+(selectedIngredients.has(ing)?'active':'');
+    btn.textContent=ing;
+    btn.onclick=()=>{
+      selectedIngredients.has(ing)?selectedIngredients.delete(ing):selectedIngredients.add(ing);
+      saveUserData();renderPantry();renderRecipes();
+    };
+    container.appendChild(btn);
+  });
+}
+function renderRecipes(){
+  const search=document.getElementById('search-bar').value.toLowerCase().trim();
+  const diet=document.getElementById('dietary-filter').value;
+  const list=document.getElementById('recipe-list');
+  const matches=recipes.filter(r=>r.name.toLowerCase().includes(search)&&(diet==='all'||r.diet===diet));
+  document.getElementById('recipe-count').textContent=`Showing ${matches.length} recipe${matches.length===1?'':'s'}. Select ingredients above to check what you can make.`;
+  list.innerHTML='';
+  if(!matches.length){list.innerHTML='<div class="empty"><div style="font-size:2rem">🍳</div><h3>No recipes found</h3><p>Try another search or change the diet filter.</p></div>';return;}
+  matches.forEach(recipe=>{
+    const missing=recipe.ingredients.filter(i=>!selectedIngredients.has(i));
+    const isSaved=savedRecipes.has(recipe.id);
+    const card=document.createElement('article');card.className='card';
+    card.innerHTML=`<img src="${recipe.image}" class="card-img" alt="${recipe.name}" loading="lazy">
+      <div class="card-body">
+        <div class="badges"><span class="badge">${recipe.difficulty}</span><span class="badge">⏱ ${recipe.prepTime} prep</span>${recipe.diet?`<span class="badge green">${recipe.diet}</span>`:''}</div>
+        <h3>${recipe.name} ${isSaved?'⭐':''}</h3>
+        <div class="meta">🍳 Cook time: ${recipe.cookTime} · 🥕 ${recipe.ingredients.length} ingredients</div>
+        <div class="availability ${missing.length?'missing':'ready'}">${missing.length?'Missing: '+missing.join(', '):'✅ You have everything!'}</div>
+        <div class="actions">
+          <button class="btn btn-primary" onclick="openModal(${recipe.id})">📖 View recipe</button>
+          <button class="btn btn-secondary" onclick="toggleSave(${recipe.id})">${isSaved?'★ Saved':'☆ Save'}</button>
+          ${missing.length?`<button class="btn btn-green" style="grid-column:1/-1" onclick='addMissing(${JSON.stringify(missing)})'>🛒 Add missing to grocery list</button>`:''}
+        </div>
+      </div>`;
+    list.appendChild(card);
+  });
+}
+function openModal(id){
+  const r=recipes.find(x=>x.id===id);if(!r)return;
+  document.getElementById('m-img').src=r.image;
+  document.getElementById('m-title').textContent=r.name;
+  document.getElementById('m-meta').innerHTML=`<span class="modal-chip">⏱ Prep: ${r.prepTime}</span><span class="modal-chip">🍳 Cook: ${r.cookTime}</span><span class="modal-chip">📊 ${r.difficulty}</span>${r.diet?`<span class="modal-chip">🥗 ${r.diet}</span>`:''}`;
+  document.getElementById('m-ingredients').innerHTML=r.ingredients.map(i=>`<li>• ${i}</li>`).join('');
+  document.getElementById('m-steps').innerHTML=r.steps.map((s,i)=>`<div class="step"><div class="step-no">${i+1}</div><div>${s}</div></div>`).join('');
+  document.getElementById('m-tip').innerHTML=`💡 <strong>Kitchen tip:</strong> ${r.tip}`;
+  document.getElementById('recipe-modal').style.display='flex';
+  document.body.style.overflow='hidden';
+}
+function closeModal(){document.getElementById('recipe-modal').style.display='none';document.body.style.overflow='';}
+function toggleSave(id){savedRecipes.has(id)?savedRecipes.delete(id):savedRecipes.add(id);saveUserData();renderRecipes();}
+function addMissing(items){
+  if(!currentUser){alert('Please log in first to save items to your Grocery List.');return;}
+  currentUser.groceryList=currentUser.groceryList||[];
+  items.forEach(i=>{if(!currentUser.groceryList.some(g=>g.text&&g.text.toLowerCase()===i.toLowerCase())) currentUser.groceryList.push({text:i,completed:false});});
+  saveUserData();alert(`${items.length} item(s) added to your Grocery List!`);
+}
+document.getElementById('search-bar').addEventListener('input',renderRecipes);
+document.getElementById('dietary-filter').addEventListener('change',renderRecipes);
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal()});
+renderPantry();renderRecipes();
+</script>
+<script src="auth.js"></script>
+</body>
+</html>

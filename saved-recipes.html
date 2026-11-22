@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KitchenSync - Saved Recipes</title>
+    <link rel="stylesheet" href="background.css">
+    <style>
+        :root { --primary: #d97706; --bg: #fcfbf9; --text: #292524; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; padding: 20px; color: var(--text); }
+        .app-container { max-width: 850px; margin: 0 auto; background: white; padding: 30px; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); border: 1px solid #e7e5e4; }
+        header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px dashed #e7e5e4; padding-bottom: 15px; margin-bottom: 20px; }
+        h1 { color: var(--primary); margin: 0; font-size: 1.5rem; }
+        .nav-links a { 
+            white-space: nowrap;
+            text-decoration: none; color: #57534e; font-weight: bold; margin-left: 15px; font-size: 0.95rem; }
+        .recipe-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 15px; margin-top: 20px; }
+        .recipe-card { border: 1px solid #e7e5e4; padding: 20px; border-radius: 12px; background: #fff; box-shadow: 0 2px 8px rgba(0,0,0,0.02); }
+        .recipe-card h3 { margin-top: 0; color: #1c1917; }
+        .btn { background: #dc2626; color: white; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 0.85rem; font-weight: bold; margin-top: 10px; width: 100%; }
+        .empty-state { text-align: center; color: #78716c; padding: 40px 0; }
+        .login-warning { background: #fef3c7; color: #92400e; padding: 12px; border-radius: 8px; font-weight: bold; text-align: center; margin-bottom: 20px; }
+         .nav-links {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    flex-wrap: nowrap;
+    white-space: nowrap;
+}
+   
+   </style>
+</head>
+<body>
+    <div class="app-container">
+        <header>
+            <h1>⭐ Saved Recipes</h1>
+            <div class="nav-links">
+                <a href="index2.html">Home</a>
+                <a href="fridge.html">My Fridge</a>
+                <a href="grocery.html">Grocery List</a>
+                <a href="planner.html">Meal Planner</a>
+            </div>
+        </header>
+
+        <div id="auth-warning" class="login-warning" style="display: none;">
+            ⚠️ You are not logged in! Please <a href="login.html" style="color:#b45309;">Log In</a> to view your saved recipes.
+        </div>
+
+        <div id="recipe-container" class="recipe-grid"></div>
+    </div>
+
+    <script>
+        const allRecipes = [
+            { id: 1, name: "Garlic Butter Pasta", ingredients: ["pasta", "garlic", "butter", "salt"], diet: "vegetarian" },
+            { id: 2, name: "Tomato Basil Salad", ingredients: ["tomatoes", "basil", "olive oil", "salt"], diet: "vegan" },
+            { id: 3, name: "Scrambled Eggs", ingredients: ["eggs", "butter", "salt"], diet: "vegetarian" },
+            { id: 4, name: "Avocado Toast", ingredients: ["bread", "avocado", "salt", "lemon"], diet: "vegan" },
+            { id: 5, name: "Chicken Stir Fry", ingredients: ["chicken", "soy sauce", "garlic", "rice"], diet: "gluten-free" },
+            { id: 6, name: "Simple Rice Bowl", ingredients: ["rice", "soy sauce", "eggs"], diet: "vegetarian" }
+        ];
+
+        const currentUserEmail = localStorage.getItem('currentUser');
+        const container = document.getElementById('recipe-container');
+        let users = JSON.parse(localStorage.getItem('users')) || [];
+        let currentUser = users.find(u => u.email === currentUserEmail);
+
+        if (!currentUserEmail || !currentUser) {
+            document.getElementById('auth-warning').style.display = 'block';
+        } else {
+            renderSavedRecipes();
+        }
+
+        function renderSavedRecipes() {
+            container.innerHTML = '';
+            const savedIds = currentUser.savedRecipes || [];
+            const savedList = allRecipes.filter(r => savedIds.includes(r.id));
+
+            if (savedList.length === 0) {
+                container.innerHTML = '<div class="empty-state">No saved recipes yet! Go to <a href="fridge.html">My Fridge</a> to star your favorites.</div>';
+                return;
+            }
+
+            savedList.forEach(recipe => {
+                const card = document.createElement('div');
+                card.className = 'recipe-card';
+                card.innerHTML = `
+                    <h3>${recipe.name}</h3>
+                    <p style="font-size:0.9rem; color:#57534e;"><strong>Ingredients:</strong> ${recipe.ingredients.join(', ')}</p>
+                    <button class="btn" onclick="removeRecipe(${recipe.id})">Remove from Saved</button>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function removeRecipe(id) {
+            currentUser.savedRecipes = currentUser.savedRecipes.filter(rId => rId !== id);
+            const userIndex = users.findIndex(u => u.email === currentUserEmail);
+            if (userIndex !== -1) {
+                users[userIndex] = currentUser;
+                localStorage.setItem('users', JSON.stringify(users));
+            }
+            renderSavedRecipes();
+        }
+        function renderUserHeader() {
+    const navLinks = document.querySelector('.nav-links');
+    const currentUserEmail = localStorage.getItem('currentUser');
+
+    if (currentUserEmail) {
+        const users = JSON.parse(localStorage.getItem('users')) || [];
+        const user = users.find(u => u.email === currentUserEmail);
+        const displayName = user ? user.name.split(' ')[0] : 'User';
+
+        const userTag = document.createElement('span');
+        userTag.style.cssText = 'margin-left: 15px; font-weight: bold; color: #d97706;';
+        userTag.innerHTML = `👤 ${displayName} (<a href="#" id="logout-link" style="color:#dc2626; text-decoration:underline;">Logout</a>)`;
+        navLinks.appendChild(userTag);
+
+        document.getElementById('logout-link').addEventListener('click', (e) => {
+            e.preventDefault();
+            localStorage.removeItem('currentUser');
+            alert('Logged out successfully!');
+            window.location.reload();
+        });
+    } else {
+        const loginLink = document.createElement('a');
+        loginLink.href = 'login.html';
+        loginLink.style.cssText = 'color: #d97706; font-weight: bold; margin-left: 15px;';
+        loginLink.textContent = 'Login';
+        navLinks.appendChild(loginLink);
+    }
+}
+
+renderUserHeader();
+function getUserData() {
+    const currentUserEmail = localStorage.getItem('currentUser');
+    if (!currentUserEmail) return null;
+
+    let users = JSON.parse(localStorage.getItem('users')) || [];
+    return users.find(u => u.email === currentUserEmail);
+}
+
+function saveUserData(updatedData) {
+    const currentUserEmail = localStorage.getItem('currentUser');
+    if (!currentUserEmail) {
+        alert('Please log in to save your information permanently.');
+        return false;
+    }
+
+    let users = JSON.parse(localStorage.getItem('users')) || [];
+    const userIndex = users.findIndex(u => u.email === currentUserEmail);
+
+    if (userIndex !== -1) {
+        users[userIndex] = { ...users[userIndex], ...updatedData };
+        localStorage.setItem('users', JSON.stringify(users));
+        return true;
+    }
+    return false;
+}
+    </script>
+    <script src="auth.js"></script>
+</body>
+</html>

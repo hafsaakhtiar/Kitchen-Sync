@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KitchenSync - Weekly Meal Planner</title>
+    <link rel="stylesheet" href="background.css">
+    <style>
+        :root { --primary: #d97706; --bg: #fcfbf9; --text: #292524; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; padding: 20px; color: var(--text); }
+        .app-container { max-width: 900px; margin: 0 auto; background: white; padding: 30px; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); border: 1px solid #e7e5e4; }
+        header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px dashed #e7e5e4; padding-bottom: 15px; margin-bottom: 20px; }
+        h1 { color: var(--primary); margin: 0; font-size: 1.5rem; }
+        .nav-links a { 
+            white-space: nowrap;
+            text-decoration: none; color: #57534e; font-weight: bold; margin-left: 15px; font-size: 0.95rem; }
+        .planner-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 15px; }
+        .day-card { border: 1px solid #e7e5e4; border-radius: 10px; padding: 15px; background: #fafaf9; }
+        .day-title { font-weight: bold; color: var(--primary); border-bottom: 1px solid #d6d3d1; padding-bottom: 5px; margin-bottom: 10px; }
+        .meal-group { margin-bottom: 10px; }
+        .meal-group label { font-size: 0.75rem; font-weight: bold; color: #78716c; text-transform: uppercase; }
+        .meal-group input { width: 100%; padding: 6px; border: 1px solid #d6d3d1; border-radius: 6px; box-sizing: border-box; font-size: 0.85rem; margin-top: 3px; }
+        .save-btn { background: var(--primary); color: white; border: none; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; width: 100%; margin-top: 20px; }
+             .nav-links {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    flex-wrap: nowrap;
+    white-space: nowrap;
+}
+
+</style>
+</head>
+<body>
+    <div class="app-container">
+        <header>
+            <h1>📅 Weekly Meal Planner</h1>
+            <div class="nav-links">
+                <a href="index2.html">Home</a>
+                <a href="fridge.html">My Fridge</a>
+                <a href="grocery.html">Grocery List</a>
+            </div>
+        </header>
+
+        <div class="planner-grid" id="planner-grid"></div>
+        <button class="save-btn" onclick="savePlan()">Save Plan</button>
+    </div>
+
+    
+</body>
+</html><script>
+        const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+        
+        // Load current user data safely
+        const currentUserEmail = localStorage.getItem('currentUser');
+        let users = JSON.parse(localStorage.getItem('users')) || [];
+        let currentUser = users.find(u => u.email === currentUserEmail);
+
+        // Optional: Uncomment the lines below if you actually want to lock this page to Pro users only
+        /*
+        if (!currentUser || currentUser.plan !== 'Pro') {
+            alert('🔒 The Weekly Meal Planner is a Chef Pro feature. Please upgrade your subscription to access this page.');
+            window.location.href = 'subscription.html';
+        }
+        */
+
+        let planData = currentUser ? (currentUser.mealPlan || {}) : {};
+        const grid = document.getElementById('planner-grid');
+
+        // Render the weekly planner grid
+        days.forEach(day => {
+            const card = document.createElement('div');
+            card.className = 'day-card';
+            const dayKey = day.toLowerCase();
+            const dayValues = planData[dayKey] || { b: '', l: '', d: '' };
+
+            card.innerHTML = `
+                <div class="day-title">${day}</div>
+                <div class="meal-group">
+                    <label>Breakfast</label>
+                    <input type="text" id="${dayKey}-b" value="${dayValues.b || ''}" placeholder="e.g. Oatmeal">
+                </div>
+                <div class="meal-group">
+                    <label>Lunch</label>
+                    <input type="text" id="${dayKey}-l" value="${dayValues.l || ''}" placeholder="e.g. Salad">
+                </div>
+                <div class="meal-group">
+                    <label>Dinner</label>
+                    <input type="text" id="${dayKey}-d" value="${dayValues.d || ''}" placeholder="e.g. Pasta">
+                </div>
+            `;
+            grid.appendChild(card);
+        });
+
+        function savePlan() {
+            if (!currentUser) {
+                alert('Please log in to save your meal plan!');
+                return;
+            }
+            const updatedPlan = {};
+            days.forEach(day => {
+                const dayKey = day.toLowerCase();
+                updatedPlan[dayKey] = {
+                    b: document.getElementById(`${dayKey}-b`).value,
+                    l: document.getElementById(`${dayKey}-l`).value,
+                    d: document.getElementById(`${dayKey}-d`).value
+                };
+            });
+            currentUser.mealPlan = updatedPlan;
+            const idx = users.findIndex(u => u.email === currentUserEmail);
+            if (idx !== -1) {
+                users[idx] = currentUser;
+                localStorage.setItem('users', JSON.stringify(users));
+            }
+            alert('Weekly Meal Plan Saved!');
+        }
+
+        function renderUserHeader() {
+            const navLinks = document.querySelector('.nav-links');
+            if (!navLinks) return;
+            
+            const activeUserEmail = localStorage.getItem('currentUser');
+            if (activeUserEmail) {
+                const activeUsers = JSON.parse(localStorage.getItem('users')) || [];
+                const activeUser = activeUsers.find(u => u.email === activeUserEmail);
+                const displayName = activeUser ? activeUser.name.split(' ')[0] : 'User';
+
+                const userTag = document.createElement('span');
+                userTag.style.cssText = 'margin-left: 15px; font-weight: bold; color: #d97706;';
+                userTag.innerHTML = `👤 ${displayName} (<a href="#" id="logout-link" style="color:#dc2626; text-decoration:underline;">Logout</a>)`;
+                navLinks.appendChild(userTag);
+
+                document.getElementById('logout-link').addEventListener('click', (e) => {
+                    e.preventDefault();
+                    localStorage.removeItem('currentUser');
+                    alert('Logged out successfully!');
+                    window.location.reload();
+                });
+            } else {
+                const loginLink = document.createElement('a');
+                loginLink.href = 'login.html';
+                loginLink.style.cssText = 'color: #d97706; font-weight: bold; margin-left: 15px;';
+                loginLink.textContent = 'Login';
+                navLinks.appendChild(loginLink);
+            }
+        }
+
+        renderUserHeader();
+
+        function getUserData() {
+            const email = localStorage.getItem('currentUser');
+            if (!email) return null;
+            let allUsers = JSON.parse(localStorage.getItem('users')) || [];
+            return allUsers.find(u => u.email === email);
+        }
+
+        function saveUserData(updatedData) {
+            const email = localStorage.getItem('currentUser');
+            if (!email) {
+                alert('Please log in to save your information permanently.');
+                return false;
+            }
+            let allUsers = JSON.parse(localStorage.getItem('users')) || [];
+            const userIndex = allUsers.findIndex(u => u.email === email);
+
+            if (userIndex !== -1) {
+                allUsers[userIndex] = { ...allUsers[userIndex], ...updatedData };
+                localStorage.setItem('users', JSON.stringify(allUsers));
+                return true;
+            }
+            return false;
+        }
+    </script>
+    <script src="auth.js"></script>
+    </body>
+    </html>

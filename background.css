@@ -1,0 +1,24 @@
+/* KitchenSync dotted background */
+body {
+    background-color: #fcfbf9;
+    background-image: radial-gradient(#e7e5e4 1px, transparent 1px);
+    background-size: 24px 24px;
+    background-attachment: fixed;
+}
+@media (max-width: 1000px) {
+    nav {
+        padding: 15px 20px;
+    }
+
+    .nav-links {
+        gap: 10px;
+    }
+
+    .nav-links a {
+        font-size: 0.85rem;
+    }
+
+    .logo {
+        font-size: 1.3rem;
+    }
+}

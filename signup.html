@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KitchenSync - Sign Up</title>
+    <link rel="stylesheet" href="background.css">
+    <style>
+        :root { --primary: #d97706; --bg: #fcfbf9; --text: #292524; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .card { background: white; padding: 40px; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); width: 100%; max-width: 400px; border: 1px solid #e7e5e4; }
+        h2 { color: var(--primary); margin-top: 0; text-align: center; }
+        .input-group { margin-bottom: 20px; display: flex; flex-direction: column; }
+        label { font-size: 0.85rem; font-weight: bold; margin-bottom: 6px; color: #57534e; }
+        input { padding: 12px; border: 1px solid #d6d3d1; border-radius: 8px; font-size: 1rem; outline: none; }
+        input:focus { border-color: var(--primary); }
+        button { width: 100%; padding: 12px; background: var(--primary); color: white; border: none; border-radius: 8px; font-size: 1rem; font-weight: bold; cursor: pointer; }
+        button:hover { background: #b45309; }
+        .footer-text { text-align: center; margin-top: 20px; font-size: 0.9rem; color: #78716c; }
+        .footer-text a { color: var(--primary); text-decoration: none; font-weight: bold; }
+        .back-home { display: block; text-align: center; margin-top: 15px; font-size: 0.85rem; color: #a8a29e; text-decoration: none; }
+
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h2>Create Account</h2>
+        <form onsubmit="handleSignup(event)" id="signup-form">
+            <div class="input-group">
+                <label>Full Name</label>
+                <input type="text" id="name" required placeholder="John Doe">
+            </div>
+            <div class="input-group">
+                <label>Email Address</label>
+                <input type="email" id="email" required placeholder="user@example.com">
+            </div>
+            <div class="input-group">
+                <label>Password</label>
+                <input type="password" id="password" required placeholder="••••••••">
+            </div>
+            <button type="submit">Sign Up</button>
+        </form>
+        <div class="footer-text">
+            Already have an account? <a href="login.html">Login</a>
+        </div>
+        <a href="index2.html" class="back-home">← Back to Home</a>
+    </div>
+<script>
+
+function handleSignup(event) {
+
+    event.preventDefault();
+
+
+    const name =
+        document.getElementById('signup-name').value.trim();
+
+    const email =
+        document.getElementById('signup-email')
+        .value
+        .trim()
+        .toLowerCase();
+
+    const password =
+        document.getElementById('signup-password').value;
+
+
+    let users =
+        JSON.parse(localStorage.getItem('users')) || [];
+
+
+    // Check if email already exists
+    const existingUser =
+        users.find(function(user) {
+            return user.email === email;
+        });
+
+
+    if (existingUser) {
+
+        alert('An account with this email already exists!');
+
+        return;
+    }
+
+
+    // Create new account
+    const newUser = {
+
+        name: name,
+
+        email: email,
+
+        password: password,
+
+        plan: 'Free',
+
+        fridge: [],
+
+        grocery: [],
+
+        savedRecipes: []
+
+    };
+
+
+    users.push(newUser);
+
+
+    localStorage.setItem(
+        'users',
+        JSON.stringify(users)
+    );
+
+
+    // Login user automatically
+    localStorage.setItem(
+        'currentUser',
+        email
+    );
+
+
+    alert('Account created successfully!');
+
+
+    // Go to official homepage
+    window.location.href = 'index2.html';
+
+}
+
+</script>
+    <script src="auth.js"></script>
+</body>
+</html>

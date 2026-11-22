@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KitchenSync - Recipe Scaler</title>
+    <link rel="stylesheet" href="background.css">
+    <style>
+        :root { --primary: #d97706; --bg: #fcfbf9; --text: #292524; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; padding: 20px; color: var(--text); }
+        .app-container { max-width: 700px; margin: 0 auto; background: white; padding: 30px; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); border: 1px solid #e7e5e4; }
+        header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px dashed #e7e5e4; padding-bottom: 15px; margin-bottom: 20px; }
+        h1 { color: var(--primary); margin: 0; font-size: 1.5rem; }
+        .nav-links a { 
+            white-space: nowrap;
+            text-decoration: none; color: #57534e; font-weight: bold; margin-left: 15px; font-size: 0.95rem; }
+        .nav-links {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    flex-wrap: nowrap;
+    white-space: nowrap;
+}
+        .settings-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; }
+        .input-group { display: flex; flex-direction: column; margin-bottom: 15px; }
+        label { font-size: 0.85rem; font-weight: bold; margin-bottom: 5px; color: #57534e; }
+        input, select, textarea { padding: 10px; border: 1px solid #d6d3d1; border-radius: 8px; font-size: 1rem; outline: none; }
+        input:focus, select:focus, textarea:focus { border-color: var(--primary); }
+        textarea { resize: vertical; min-height: 120px; font-family: monospace; }
+        
+        .btn-container { display: flex; gap: 10px; margin-top: 15px; }
+        button { flex: 1; padding: 12px; border: none; border-radius: 8px; font-size: 1rem; font-weight: bold; cursor: pointer; }
+        #scale-btn { background-color: var(--primary); color: white; }
+        #scale-btn:hover { background-color: #b45309; }
+        #reset-btn { background-color: #f5f5f4; color: #444; }
+        
+        .output-section { margin-top: 30px; border-top: 2px dashed #e7e5e4; padding-top: 20px; }
+        #scaled-output { background: #fafaf9; padding: 15px; border-radius: 8px; min-height: 80px; white-space: pre-wrap; font-family: monospace; font-size: 1rem; line-height: 1.5; border: 1px solid #e7e5e4; }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <header>
+            <h1>⚖️ Recipe Ingredient Scaler</h1>
+            <div class="nav-links">
+                <a href="index2.html">Home</a>
+                <a href="fridge.html">My Fridge</a>
+                <a href="subscription.html">Pricing</a>
+            </div>
+        </header>
+
+        <div class="settings-grid">
+            <div class="input-group">
+                <label for="original-servings">Original Servings</label>
+                <input type="number" id="original-servings" value="2" min="1">
+            </div>
+            <div class="input-group">
+                <label for="target-servings">Target Servings</label>
+                <input type="number" id="target-servings" value="4" min="1">
+            </div>
+        </div>
+
+        <div class="input-group">
+            <label for="unit-system">Unit System Conversion</label>
+            <select id="unit-system">
+                <option value="none">Keep Original Units</option>
+                <option value="metric-to-us">Metric (g/ml) ➔ US (oz/fl oz)</option>
+                <option value="us-to-metric">US (oz/fl oz) ➔ Metric (g/ml)</option>
+            </select>
+        </div>
+
+        <div class="input-group">
+            <label for="ingredients-input">Paste Ingredients (One per line)</label>
+            <textarea id="ingredients-input" placeholder="e.g.
+1 1/2 cups flour
+200 g sugar
+1 tbsp vanilla extract"></textarea>
+        </div>
+
+        <div class="btn-container">
+            <button id="scale-btn">Scale Recipe</button>
+            <button id="reset-btn">Reset</button>
+        </div>
+
+        <div class="output-section">
+            <h3>Scaled Ingredients:</h3>
+            <div id="scaled-output">Your scaled ingredients will appear here...</div>
+        </div>
+    </div>
+
+    <script>
+        const scaleBtn = document.getElementById('scale-btn');
+        const resetBtn = document.getElementById('reset-btn');
+        const originalInput = document.getElementById('original-servings');
+        const targetInput = document.getElementById('target-servings');
+        const unitSystemSelect = document.getElementById('unit-system');
+        const ingredientsTextarea = document.getElementById('ingredients-input');
+        const scaledOutput = document.getElementById('scaled-output');
+
+        function parseFraction(str) {
+            str = str.trim();
+            if (str.includes(' ')) {
+                const parts = str.split(' ');
+                const whole = parseFloat(parts[0]) || 0;
+                const fracParts = parts[1].split('/');
+                if (fracParts.length === 2) return whole + (parseFloat(fracParts[0]) / parseFloat(fracParts[1]));
+                return whole;
+            } else if (str.includes('/')) {
+                const parts = str.split('/');
+                if (parts.length === 2) return parseFloat(parts[0]) / parseFloat(parts[1]);
+            }
+            return parseFloat(str) || NaN;
+        }
+
+        function decimalToFraction(decimal) {
+            if (isNaN(decimal)) return '';
+            decimal = Math.round(decimal * 100) / 100;
+            const whole = Math.floor(decimal);
+            const remainder = decimal - whole;
+
+            if (remainder < 0.05) return whole === 0 ? '0' : `${whole}`;
+            if (remainder > 0.95) return `${whole + 1}`;
+
+            const fractions = [
+                { val: 0.25, str: '1/4' }, { val: 0.33, str: '1/3' },
+                { val: 0.5, str: '1/2' }, { val: 0.67, str: '2/3' }, { val: 0.75, str: '3/4' }
+            ];
+
+            let closest = fractions[0];
+            let minDiff = Math.abs(remainder - closest.val);
+
+            for (let i = 1; i < fractions.length; i++) {
+                let diff = Math.abs(remainder - fractions[i].val);
+                if (diff < minDiff) { minDiff = diff; closest = fractions[i]; }
+            }
+
+            if (minDiff < 0.08) return whole === 0 ? closest.str : `${whole} ${closest.str}`;
+            return decimal.toString();
+        }
+
+        function scaleRecipe() {
+            const origServings = parseFloat(originalInput.value);
+            const targetServings = parseFloat(targetInput.value);
+            const unitMode = unitSystemSelect.value;
+            const lines = ingredientsTextarea.value.split('\n');
+
+            if (!origServings || origServings <= 0 || !targetServings || targetServings <= 0) {
+                scaledOutput.textContent = "Please enter valid positive numbers for servings.";
+                return;
+            }
+
+            const ratio = targetServings / origServings;
+            let resultHTML = [];
+
+            lines.forEach(line => {
+                const trimmed = line.trim();
+                if (!trimmed) { resultHTML.push(''); return; }
+
+                // Match numbers, fractions, decimals at start of string
+                const regex = /^((?:\d+\s+\d+\/\d+|\d+\/\d+|\d+(?:\.\d+)?))\s*(.*)$/;
+                const match = trimmed.match(regex);
+
+                if (!match) { resultHTML.push(line); return; }
+
+                let rawQtyStr = match[1];
+                let restOfLine = match[2];
+                let numericQty = parseFraction(rawQtyStr);
+                
+                if (isNaN(numericQty)) { resultHTML.push(line); return; }
+
+                let scaledQty = numericQty * ratio;
+
+                if (unitMode !== 'none') {
+                    let unitMatch = restOfLine.match(/^([a-zA-Z]+)(.*)$/);
+                    if (unitMatch) {
+                        let unit = unitMatch[1].toLowerCase();
+                        let remainderText = unitMatch[2];
+
+                        if (unitMode === 'metric-to-us') {
+                            if (unit === 'g' || unit === 'grams') { scaledQty /= 28.35; restOfLine = 'oz' + remainderText; }
+                            else if (unit === 'ml' || unit === 'milliliters') { scaledQty /= 29.574; restOfLine = 'fl oz' + remainderText; }
+                        } else if (unitMode === 'us-to-metric') {
+                            if (unit === 'oz' || unit === 'ounce' || unit === 'ounces') { scaledQty *= 28.35; restOfLine = 'g' + remainderText; }
+                            else if (unit === 'floz' || unit === 'fl') { scaledQty *= 29.574; restOfLine = 'ml' + remainderText; }
+                        }
+                    }
+                }
+
+                resultHTML.push(`${decimalToFraction(scaledQty)} ${restOfLine}`);
+            });
+
+            scaledOutput.textContent = resultHTML.join('\n');
+        }
+
+        scaleBtn.addEventListener('click', scaleRecipe);
+        resetBtn.addEventListener('click', () => {
+            originalInput.value = '2'; 
+            targetInput.value = '4'; 
+            unitSystemSelect.value = 'none';
+            ingredientsTextarea.value = ''; 
+            scaledOutput.textContent = 'Your scaled ingredients will appear here...';
+        });
+
+        [originalInput, targetInput, unitSystemSelect, ingredientsTextarea].forEach(el => {
+            el.addEventListener('input', () => { 
+                if (ingredientsTextarea.value.trim() !== '') scaleRecipe(); 
+            });
+        });
+        function renderUserHeader() {
+    const navLinks = document.querySelector('.nav-links');
+    const currentUserEmail = localStorage.getItem('currentUser');
+
+    if (currentUserEmail) {
+        const users = JSON.parse(localStorage.getItem('users')) || [];
+        const user = users.find(u => u.email === currentUserEmail);
+        const displayName = user ? user.name.split(' ')[0] : 'User';
+
+        const userTag = document.createElement('span');
+        userTag.style.cssText = 'margin-left: 15px; font-weight: bold; color: #d97706;';
+        userTag.innerHTML = `👤 ${displayName} (<a href="#" id="logout-link" style="color:#dc2626; text-decoration:underline;">Logout</a>)`;
+        navLinks.appendChild(userTag);
+
+        document.getElementById('logout-link').addEventListener('click', (e) => {
+            e.preventDefault();
+            localStorage.removeItem('currentUser');
+            alert('Logged out successfully!');
+            window.location.reload();
+        });
+    } else {
+        const loginLink = document.createElement('a');
+        loginLink.href = 'login.html';
+        loginLink.style.cssText = 'color: #d97706; font-weight: bold; margin-left: 15px;';
+        loginLink.textContent = 'Login';
+        navLinks.appendChild(loginLink);
+    }
+}
+
+renderUserHeader();
+function getUserData() {
+    const currentUserEmail = localStorage.getItem('currentUser');
+    if (!currentUserEmail) return null;
+
+    let users = JSON.parse(localStorage.getItem('users')) || [];
+    return users.find(u => u.email === currentUserEmail);
+}
+
+function saveUserData(updatedData) {
+    const currentUserEmail = localStorage.getItem('currentUser');
+    if (!currentUserEmail) {
+        alert('Please log in to save your information permanently.');
+        return false;
+    }
+
+    let users = JSON.parse(localStorage.getItem('users')) || [];
+    const userIndex = users.findIndex(u => u.email === currentUserEmail);
+
+    if (userIndex !== -1) {
+        users[userIndex] = { ...users[userIndex], ...updatedData };
+        localStorage.setItem('users', JSON.stringify(users));
+        return true;
+    }
+    return false;
+}
+    </script>
+    <script src="auth.js"></script>
+</body>
+</html>

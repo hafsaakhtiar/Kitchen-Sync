@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KitchenSync - Grocery List</title>
+    <link rel="stylesheet" href="background.css">
+    <style>
+        :root { --primary: #d97706; --bg: #fcfbf9; --text: #292524; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; padding: 20px; color: var(--text); }
+        .app-container { max-width: 650px; margin: 0 auto; background: white; padding: 30px; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); border: 1px solid #e7e5e4; }
+        header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px dashed #e7e5e4; padding-bottom: 15px; margin-bottom: 20px; }
+        h1 { color: var(--primary); margin: 0; font-size: 1.5rem; }
+        .nav-links a { 
+            white-space: nowrap;
+            text-decoration: none; color: #57534e; font-weight: bold; margin-left: 15px; font-size: 0.95rem; }
+        .input-row { display: flex; gap: 10px; margin-bottom: 20px; }
+        input[type="text"] { flex: 1; padding: 10px; border: 1px solid #d6d3d1; border-radius: 8px; font-size: 1rem; outline: none; }
+        button { background: var(--primary); color: white; border: none; padding: 10px 18px; border-radius: 8px; font-weight: bold; cursor: pointer; }
+        .clear-btn { background: #f5f5f4; color: #444; width: 100%; margin-top: 15px; }
+        .grocery-list { list-style: none; padding: 0; margin: 0; }
+        .grocery-item { display: flex; align-items: center; justify-content: space-between; padding: 12px; border-bottom: 1px solid #e7e5e4; }
+        .grocery-item.completed span { text-decoration: line-through; color: #a8a29e; }
+        .del-btn { background: none; color: #dc2626; border: none; font-weight: bold; cursor: pointer; font-size: 1rem; }
+        .nav-links {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    flex-wrap: nowrap;
+    white-space: nowrap;
+}
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <header>
+            <h1>🛒 Grocery List</h1>
+            <div class="nav-links">
+                <a href="index2.html">Home</a>
+                <a href="fridge.html">My Fridge</a>
+                <a href="saved-recipes.html">Saved Recipes</a>
+            </div>
+        </header>
+
+        <div class="input-row">
+            <input type="text" id="item-input" placeholder="Add an item (e.g., Milk, Flour, Eggs)">
+            <button onclick="addItem()">Add Item</button>
+        </div>
+
+        <ul class="grocery-list" id="grocery-list"></ul>
+        <button class="clear-btn" onclick="clearCompleted()">Clear Completed</button>
+    </div>
+
+    <script>
+        const currentUserEmail = localStorage.getItem('currentUser');
+        let users = JSON.parse(localStorage.getItem('users')) || [];
+        let currentUser = users.find(u => u.email === currentUserEmail);
+
+        let items = currentUser ? (currentUser.groceryList || []) : [];
+
+        function saveGroceryData() {
+            if (!currentUser) return;
+            currentUser.groceryList = items;
+            const idx = users.findIndex(u => u.email === currentUserEmail);
+            if (idx !== -1) {
+                users[idx] = currentUser;
+                localStorage.setItem('users', JSON.stringify(users));
+            }
+        }
+
+        function addItem() {
+            const text = document.getElementById('item-input').value.trim();
+            if (!text) return;
+            items.push({ text: text, completed: false });
+            document.getElementById('item-input').value = '';
+            saveGroceryData();
+            renderList();
+        }
+
+        function toggleItem(index) {
+            items[index].completed = !items[index].completed;
+            saveGroceryData();
+            renderList();
+        }
+
+        function deleteItem(index) {
+            items.splice(index, 1);
+            saveGroceryData();
+            renderList();
+        }
+
+        function clearCompleted() {
+            items = items.filter(i => !i.completed);
+            saveGroceryData();
+            renderList();
+        }
+
+        function renderList() {
+            const listEl = document.getElementById('grocery-list');
+            listEl.innerHTML = '';
+            if (items.length === 0) {
+                listEl.innerHTML = '<li style="text-align:center; color:#78716c; padding:15px;">Your grocery list is empty!</li>';
+                return;
+            }
+            items.forEach((item, i) => {
+                const li = document.createElement('li');
+                li.className = `grocery-item ${item.completed ? 'completed' : ''}`;
+                li.innerHTML = `
+                    <label style="cursor:pointer; flex:1;">
+                        <input type="checkbox" ${item.completed ? 'checked' : ''} onchange="toggleItem(${i})">
+                        <span style="margin-left: 10px;">${item.text}</span>
+                    </label>
+                    <button class="del-btn" onclick="deleteItem(${i})">✕</button>
+                `;
+                listEl.appendChild(li);
+            });
+        }
+
+        renderList();
+        function renderUserHeader() {
+    const navLinks = document.querySelector('.nav-links');
+    const currentUserEmail = localStorage.getItem('currentUser');
+
+    if (currentUserEmail) {
+        const users = JSON.parse(localStorage.getItem('users')) || [];
+        const user = users.find(u => u.email === currentUserEmail);
+        const displayName = user ? user.name.split(' ')[0] : 'User';
+
+        const userTag = document.createElement('span');
+        userTag.style.cssText = 'margin-left: 15px; font-weight: bold; color: #d97706;';
+        userTag.innerHTML = `👤 ${displayName} (<a href="#" id="logout-link" style="color:#dc2626; text-decoration:underline;">Logout</a>)`;
+        navLinks.appendChild(userTag);
+
+        document.getElementById('logout-link').addEventListener('click', (e) => {
+            e.preventDefault();
+            localStorage.removeItem('currentUser');
+            alert('Logged out successfully!');
+            window.location.reload();
+        });
+    } else {
+        const loginLink = document.createElement('a');
+        loginLink.href = 'login.html';
+        loginLink.style.cssText = 'color: #d97706; font-weight: bold; margin-left: 15px;';
+        loginLink.textContent = 'Login';
+        navLinks.appendChild(loginLink);
+    }
+}
+
+renderUserHeader();
+function getUserData() {
+    const currentUserEmail = localStorage.getItem('currentUser');
+    if (!currentUserEmail) return null;
+
+    let users = JSON.parse(localStorage.getItem('users')) || [];
+    return users.find(u => u.email === currentUserEmail);
+}
+
+function saveUserData(updatedData) {
+    const currentUserEmail = localStorage.getItem('currentUser');
+    if (!currentUserEmail) {
+        alert('Please log in to save your information permanently.');
+        return false;
+    }
+
+    let users = JSON.parse(localStorage.getItem('users')) || [];
+    const userIndex = users.findIndex(u => u.email === currentUserEmail);
+
+    if (userIndex !== -1) {
+        users[userIndex] = { ...users[userIndex], ...updatedData };
+        localStorage.setItem('users', JSON.stringify(users));
+        return true;
+    }
+    return false;
+}
+    </script>
+    <script src="auth.js"></script>
+</body>
+</html>

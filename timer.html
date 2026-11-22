@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KitchenSync - Kitchen Timer</title>
+    <link rel="stylesheet" href="background.css">
+    <style>
+        :root { --primary: #d97706; --bg: #fcfbf9; --text: #292524; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; padding: 20px; color: var(--text); }
+        .app-container { max-width: 600px; margin: 0 auto; background: white; padding: 30px; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); border: 1px solid #e7e5e4; text-align: center; }
+        header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px dashed #e7e5e4; padding-bottom: 15px; margin-bottom: 20px; }
+        h1 { color: var(--primary); margin: 0; font-size: 1.5rem; }
+        .nav-links a { 
+            white-space: nowrap;
+            text-decoration: none; color: #57534e; font-weight: bold; margin-left: 15px; font-size: 0.95rem; }
+        .timer-display { font-size: 4rem; font-weight: bold; color: #1c1917; font-family: monospace; margin: 20px 0; }
+        .controls { display: flex; gap: 10px; justify-content: center; }
+        button { padding: 12px 24px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 1rem; }
+        .btn-start { background: var(--primary); color: white; }
+        .btn-reset { background: #f5f5f4; color: #444; }
+        .preset-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-top: 30px; }
+        .preset-btn { background: #fffbf5; border: 1px solid #fde68a; color: #b45309; padding: 10px; border-radius: 8px; cursor: pointer; font-weight: bold; }
+    
+    .nav-links {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    flex-wrap: nowrap;
+    white-space: nowrap;
+}
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <header>
+            <h1>⏱️ Cooking Timer</h1>
+            <div class="nav-links">
+                <a href="index2.html">Home</a>
+                <a href="scaler.html">Scaler</a>
+                <a href="fridge.html">My Fridge</a>
+            </div>
+        </header>
+
+        <div class="timer-display" id="time-display">05:00</div>
+
+        <div class="controls">
+            <button class="btn-start" id="start-btn" onclick="toggleTimer()">Start</button>
+            <button class="btn-reset" onclick="resetTimer()">Reset</button>
+        </div>
+
+        <div class="preset-grid">
+            <button class="preset-btn" onclick="setMinutes(3)">Soft Eggs (3m)</button>
+            <button class="preset-btn" onclick="setMinutes(8)">Hard Eggs (8m)</button>
+            <button class="preset-btn" onclick="setMinutes(10)">Pasta Al Dente (10m)</button>
+        </div>
+    </div>
+
+    <script>
+        let totalSeconds = 300;
+        let timerId = null;
+        const display = document.getElementById('time-display');
+        const startBtn = document.getElementById('start-btn');
+
+        function updateDisplay() {
+            const mins = Math.floor(totalSeconds / 60);
+            const secs = totalSeconds % 60;
+            display.textContent = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+        }
+
+        function toggleTimer() {
+            if (timerId) {
+                clearInterval(timerId);
+                timerId = null;
+                startBtn.textContent = 'Start';
+            } else {
+                startBtn.textContent = 'Pause';
+                timerId = setInterval(() => {
+                    if (totalSeconds > 0) {
+                        totalSeconds--;
+                        updateDisplay();
+                    } else {
+                        clearInterval(timerId);
+                        timerId = null;
+                        alert('⏰ Time is up!');
+                        startBtn.textContent = 'Start';
+                    }
+                }, 1000);
+            }
+        }
+
+        function resetTimer() {
+            if (timerId) { clearInterval(timerId); timerId = null; }
+            startBtn.textContent = 'Start';
+            totalSeconds = 300;
+            updateDisplay();
+        }
+
+        function setMinutes(mins) {
+            if (timerId) { clearInterval(timerId); timerId = null; }
+            startBtn.textContent = 'Start';
+            totalSeconds = mins * 60;
+            updateDisplay();
+        }
+
+        updateDisplay();
+        function renderUserHeader() {
+    const navLinks = document.querySelector('.nav-links');
+    const currentUserEmail = localStorage.getItem('currentUser');
+
+    if (currentUserEmail) {
+        const users = JSON.parse(localStorage.getItem('users')) || [];
+        const user = users.find(u => u.email === currentUserEmail);
+        const displayName = user ? user.name.split(' ')[0] : 'User';
+
+        const userTag = document.createElement('span');
+        userTag.style.cssText = 'margin-left: 15px; font-weight: bold; color: #d97706;';
+        userTag.innerHTML = `👤 ${displayName} (<a href="#" id="logout-link" style="color:#dc2626; text-decoration:underline;">Logout</a>)`;
+        navLinks.appendChild(userTag);
+
+        document.getElementById('logout-link').addEventListener('click', (e) => {
+            e.preventDefault();
+            localStorage.removeItem('currentUser');
+            alert('Logged out successfully!');
+            window.location.reload();
+        });
+    } else {
+        const loginLink = document.createElement('a');
+        loginLink.href = 'login.html';
+        loginLink.style.cssText = 'color: #d97706; font-weight: bold; margin-left: 15px;';
+        loginLink.textContent = 'Login';
+        navLinks.appendChild(loginLink);
+    }
+}
+
+renderUserHeader();
+function getUserData() {
+    const currentUserEmail = localStorage.getItem('currentUser');
+    if (!currentUserEmail) return null;
+
+    let users = JSON.parse(localStorage.getItem('users')) || [];
+    return users.find(u => u.email === currentUserEmail);
+}
+
+function saveUserData(updatedData) {
+    const currentUserEmail = localStorage.getItem('currentUser');
+    if (!currentUserEmail) {
+        alert('Please log in to save your information permanently.');
+        return false;
+    }
+
+    let users = JSON.parse(localStorage.getItem('users')) || [];
+    const userIndex = users.findIndex(u => u.email === currentUserEmail);
+
+    if (userIndex !== -1) {
+        users[userIndex] = { ...users[userIndex], ...updatedData };
+        localStorage.setItem('users', JSON.stringify(users));
+        return true;
+    }
+    return false;
+}
+    </script>
+    <script src="auth.js"></script>
+</body>
+</html>
